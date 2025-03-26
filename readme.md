@@ -6,12 +6,12 @@ This project implements a real-time data streaming pipeline to capture and proce
 
 **Prerequisites:**
 
-1) [**Relational Database ( Postgres )**]  
-2) [**Data Migration Service**]  
-3) [**Kinesis**]
-4) [**AWS Glue**]
-5) [**Apache Hudi**]
-6) [**S3**]
+1) [**Relational Database ( Postgres )**](https://github.com/SaiKrishnaTejaLam/sparkstreamingETL/tree/90695948af4c98ce558415e312f695a8b5723334/Amazon%20RDS)   
+2) [**Data Migration Service**](https://github.com/SaiKrishnaTejaLam/sparkstreamingETL/tree/90695948af4c98ce558415e312f695a8b5723334/AWS%20DMS)  
+3) [**Kinesis**](https://github.com/SaiKrishnaTejaLam/sparkstreamingETL/tree/90695948af4c98ce558415e312f695a8b5723334/AWS%20Kinesis)  
+4) [**AWS Glue**](https://github.com/SaiKrishnaTejaLam/sparkstreamingETL/tree/90695948af4c98ce558415e312f695a8b5723334/AWS%20Glue)  
+5) [**Apache Hudi**](https://github.com/SaiKrishnaTejaLam/sparkstreamingETL/tree/3979db016818933b5352552f413494a50d23a6ae/Apache%20Hudi)  
+6) [**S3**](https://github.com/SaiKrishnaTejaLam/sparkstreamingETL/tree/aed50c5faa92a139a17642d79dba13f6d2cbc064/Amazon%20S3)
 
 ## **Why This Pipeline?**
 
@@ -65,8 +65,8 @@ Traditional batch ETL pipelines face challenges with real-time data processing, 
 
 To set up this pipeline, start by creating a PostgreSQL instance on Amazon RDS with logical replication enabled. Create a publication and a replication slot to capture CDC events. Next, configure AWS DMS by setting up a replication instance and data migration task along with defining the source (PostgreSQL) and target (Kinesis) endpoints. Start a DMS task to stream CDC events into an Amazon Kinesis data stream, making sure to configure the number of shards based on the expected data volume. Once the Kinesis stream is running, create an AWS Glue job using Spark to read data from Kinesis in micro-batches and process to store in S3.
 
-***Script Location \- *** 
+***Script Location \- ([https://github.com/SaiKrishnaTejaLam/sparkstreamingETL/tree/3979db016818933b5352552f413494a50d23a6ae/Scripts](https://github.com/SaiKrishnaTejaLam/sparkstreamingETL/tree/3979db016818933b5352552f413494a50d23a6ae/Scripts) )*** 
 
-This AWS Glue script sets up a real-time streaming ETL pipeline to process Change Data Capture (CDC) events from Amazon Kinesis and store them in Amazon S3 using Apache Hudi. The script begins by configuring Spark and Glue contexts with Hudi-specific extensions and serializers. It defines a schema for incoming JSON data, including both data fields (like id, name, gender) and metadata fields (like operation, table-name, and timestamp). The script reads binary data from the Kinesis stream, converts it to JSON, and extracts the required fields. It filters out any records with missing values and logs sample data for debugging. The script processes data using Spark�s foreachBatch() method, where each batch is written to a Hudi table in COPY\_ON\_WRITE mode. The Hudi configuration ensures that data is upserted based on the id field and precombined using the time\_stamp field. After writing the data, the script reads back the Hudi table to confirm successful writes and logs the table contents for verification. The streaming query runs continuously, processing new data as it arrives in Kinesis.
+This AWS Glue script sets up a real-time streaming ETL pipeline to process Change Data Capture (CDC) events from Amazon Kinesis and store them in Amazon S3 using Apache Hudi. The script begins by configuring Spark and Glue contexts with Hudi-specific extensions and serializers. It defines a schema for incoming JSON data, including both data fields (like id, name, gender) and metadata fields (like operation, table-name, and timestamp). The script reads binary data from the Kinesis stream, converts it to JSON, and extracts the required fields. It filters out any records with missing values and logs sample data for debugging. The script processes data using Spark’s foreachBatch() method, where each batch is written to a Hudi table in COPY\_ON\_WRITE mode. The Hudi configuration ensures that data is upserted based on the id field and precombined using the time\_stamp field. After writing the data, the script reads back the Hudi table to confirm successful writes and logs the table contents for verification. The streaming query runs continuously, processing new data as it arrives in Kinesis.
 
-![Hudi-Table-Output](Images/Hudi-Table.png)
+\!\[Hudi-Table-Output\](Images/Hudi-Table.png)
