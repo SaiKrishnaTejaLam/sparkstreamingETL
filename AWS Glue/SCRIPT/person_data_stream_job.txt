@@ -1,0 +1,46 @@
+import sys
+import boto3
+import json
+from awsglue.context import GlueContext
+from pyspark.context import SparkContext
+
+# Fetch secrets from AWS Secrets Manager
+def get_secret(secret_name, region_name="us-east-1"):
+    session = boto3.session.Session()
+    client = session.client(service_name='secretsmanager', region_name=region_name)
+    response = client.get_secret_value(SecretId=secret_name)
+    return json.loads(response['SecretString'])
+
+# Load configuration from Secrets Manager
+secret_details = get_secret("glue_kinesis_s3_secret")
+
+JOB_NAME = secret_details["JOB_NAME"]
+STREAM_NAME = secret_details["STREAM_NAME"]
+S3_OUTPUT_PATH = secret_details["S3_OUTPUT_PATH"]
+REGION = secret_details["REGION"]
+
+# Initialize Spark and Glue contexts.
+sc = SparkContext.getOrCreate()
+glueContext = GlueContext(sc)
+spark = glueContext.spark_session
+sc.setLogLevel("DEBUG")
+
+# Read streaming data from Kinesis
+kinesis_df = spark.readStream.format("kinesis") \
+    .option("streamName", STREAM_NAME) \
+    .option("endpointUrl", f"https://kinesis.{REGION}.amazonaws.com") \
+    .option("startingPosition", "TRIM_HORIZON") \
+    .load()
+
+# Convert binary data to readable string format
+processed_df = kinesis_df.selectExpr("CAST(data AS STRING) as record")
+
+# Write streaming data to Amazon S3
+query = processed_df.writeStream \
+    .format("json") \
+    .option("path", S3_OUTPUT_PATH) \
+    .option("checkpointLocation", S3_OUTPUT_PATH + "checkpoints/") \
+    .outputMode("append") \
+    .start()
+
+query.awaitTermination()
